@@ -4,18 +4,6 @@
 **connect to remote cluster by ssh :**<br /> 
 `SSH root@xx.xxx.xxx.xxx -p 2222`
 
-
-**init connection to k8s + helm :**<br /> 
-**password** /resources/init.sh <clusterName>
-`
-
-**username** <br />
-swampup2019performance@gmail.com
-
-**password** <br />
-zooloo123
-
-
 **get service ip** <br />
 `kubectl get svc`
 
@@ -57,7 +45,7 @@ Notice the 401, but nothing in cat  /var/opt/jfrog/artifactory/logs/artifactory.
 
 The logging level per appender can be modified in  $ARTIFACTORY_HOME/etc/logback.xml <br />
 
-Edit the logback.xml file on the Artifactory by Enable HTTPClient debug logging: <br />
+Edit the logback.xml file on the Artifactory and enable debug logging: <br />
 
 ```
 	<logger name="org.apache.http.wire”> 
@@ -115,8 +103,6 @@ Create 50 concurrent HTTP connections using ApaceBanchemark - as base line<br />
 create artifactory.yaml file with this values <br />
 
 ```
-postgresql:
-  postgresPassword: zooloo
 
 artifactory:
   name: artifactory
@@ -131,23 +117,14 @@ artifactory:
 ```
 
 Upgrade artifactory helm chart by applying the artifactory.yaml config file <br />
-`helm upgrade artifactory jfrog/artifactory  --version 7.14.3  -f artifactory.yaml`
+`helm upgrade artifactory jfrog/artifactory  --version 7.17.1  -f artifactory.yaml`
  <br />
  
  **Important - after every time we run helm upgrade to artifactory  we need to wait (up to few minutes) until our pods (nginx + artifactory)
  are ready - (1/1) , you going to see the state changed to Terminating and CreateContainer ...** <br/>
 `kubectl  get pod -w`
 
-
-As part of the pod status watch (-w) u may see the following error from the nginx pod - we can ignore it safley <br />
-
-```
-artifactory-artifactory-nginx-84655b8c7f-jm5fs   0/1   PostStartHookError: command '/bin/sh -c cp -Lrf /tmp/nginx.conf /etc/nginx/nginx.conf; until [ -f /etc/nginx/conf.d/artifactory.conf ]; do sleep 1; done; if ! grep -q 'upstream' /etc/nginx/conf.d/artifactory.conf; then sed -i -e 's,proxy_pass.*http://artifactory.*/artifactory/\(.*\);,proxy_pass       http://artifactory-artifactory:8081/artifactory/\1;,g' \
-    -e 's,server_name .*,server_name ~(?<repo>.+)\\.artifactory-artifactory artifactory-artifactory;,g' \
-    /etc/nginx/conf.d/artifactory.conf;
-fi; if [ -f /tmp/replicator-nginx.conf ]; then cp -fv /tmp/replicator-nginx.conf /etc/nginx/conf.d/replicator-nginx.conf; fi; if [ -f /tmp/ssl/*.crt ]; then rm -rf /var/opt/jfrog/nginx/ssl/example.*; cp -fv /tmp/ssl/* /var/opt/jfrog/nginx/ssl; fi; sleep 5; nginx -s reload; touch /var/log/nginx/conf.done
-' exited with 137: cp: cannot remove '/etc/nginx/nginx.conf': Permission denied
-```
+<br />
 
  
 Check that artifactory connector is updated (port="8081") <br />
@@ -181,7 +158,7 @@ Total:          1   14 178.4      2   14437
 
 1. Change SERVER_XML_ARTIFACTORY_MAX_THREADS value back to 200 <br />
 2. remove the SERVER_XML_ARTIFACTORY_EXTRA_CONFIG key and run the following: <br />
-`helm upgrade artifactory jfrog/artifactory  --version 7.14.3  -f artifactory.yaml` <br />
+`helm upgrade artifactory jfrog/artifactory  --version 7.17.1 --set postgresql.postgresPassword=zooloo -f artifactory.yaml` <br />
 
  **After the helm upgrade we need to wait till pod are stable again nginx and artifactory (1/1)** <br/>
 `kubectl  get pod -w`
@@ -270,7 +247,7 @@ Create a configMap <br />
 
 
 Upgrade artifactory in order to apply the nginx conf change <br />
-`helm upgrade artifactory jfrog/artifactory --version 7.14.3 --set nginx.customConfigMap=nginx-conf
+`helm upgrade artifactory jfrog/artifactory --version 7.17.1 --set nginx.customConfigMap=nginx-conf
 `
 <br />
 
@@ -299,7 +276,7 @@ Delete the config map <br />
 `kubectl delete configmap nginx-conf ` <br />
 
 Upgrade artifactory in order to revert changes <br />
-`helm upgrade artifactory jfrog/artifactory  --version 7.14.3 `
+`helm upgrade artifactory jfrog/artifactory  --version 7.17.1 `
 <br />
 
  **After the helm upgrade we need to wait till pod are stable again nginx and artifactory (1/1)** <br/>
@@ -312,9 +289,7 @@ Upgrade artifactory in order to revert changes <br />
 
 Upgrade Postgres connection details :<br />
 ```
-helm upgrade artifactory jfrog/artifactory --version 7.14.3 \
---set postgresql.postgresConfig.max_connections=2 \
---set postgresql.postgresConfig.superuser_reserved_connections=1
+helm upgrade artifactory jfrog/artifactory --version 7.17.1 --set postgresql.postgresPassword=zooloo --set postgresql.postgresConfig.max_connections=6 --set postgresql.postgresConfig.superuser_reserved_connections=3
 ```
 
 Login to artifactory - you should see the UI is stuck or even not displayed at all<br />
@@ -335,7 +310,7 @@ please read - https://jfrog.com/blog/monitoring-and-optimizing-artifactory-perfo
 
 Revert changes <br />
 ```
-helm upgrade artifactory jfrog/artifactory --version 7.14.3 \
+helm upgrade artifactory jfrog/artifactory --version 7.17.1 \
 --set postgresql.postgresConfig.max_connections=200 \
 --set postgresql.postgresConfig.superuser_reserved_connections=100
 ```
@@ -435,7 +410,7 @@ explore the relevant artifactory User plugins - https://github.com/jfrog/artifac
 # Lab 5 - JVM Memory Issues
 
 Change Xms and Xmx JVM Heap size:<br />
-`helm upgrade artifactory  jfrog/artifactory --version 7.14.3 --set artifactory.javaOpts.xms="512m"  --set artifactory.javaOpts.xmx="1g" ` <br />
+`helm upgrade artifactory  jfrog/artifactory --version 7.17.1 --set artifactory.javaOpts.xms="512m"  --set artifactory.javaOpts.xmx="1g" ` <br />
 <br />
 
  **After the helm upgrade we need to wait till pod are stable again nginx and artifactory (1/1)** <br/>
@@ -444,7 +419,7 @@ Change Xms and Xmx JVM Heap size:<br />
 explore - https://www.jfrog.com/confluence/display/RTF/Artifactory+JMX+MBeans 
 
 Restore change ? can u think what are the base practices sizing the VM<br />
-`helm upgrade artifactory  jfrog/artifactory --version 7.14.3 --set artifactory.javaOpts.xms="xxx"  --set artifactory.javaOpts.xmx="yyy" ` <br />
+`helm upgrade artifactory  jfrog/artifactory --version 7.17.1 --set artifactory.javaOpts.xms="xxx"  --set artifactory.javaOpts.xmx="yyy" ` <br />
 
 
  
