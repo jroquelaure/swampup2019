@@ -45,7 +45,7 @@ Notice the 401, but nothing in cat  /var/opt/jfrog/artifactory/logs/artifactory.
 
 The logging level per appender can be modified in  $ARTIFACTORY_HOME/etc/logback.xml <br />
 
-Edit the logback.xml file on the Artifactory and enable debug logging: <br />
+Edit the logback.xml file on the Artifactory by Enable HTTPClient debug logging: <br />
 
 ```
 	<logger name="org.apache.http.wire”> 
