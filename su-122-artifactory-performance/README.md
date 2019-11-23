@@ -323,6 +323,9 @@ helm upgrade artifactory jfrog/artifactory --version 7.17.1 \
 
 # Lab 2 , Phase II -  Help , I’ve got 1GB disk space left !
 
+Go back to old GC behaviour :
+artifactory.gc.skipFullGcBetweenMinorIterations=1
+
 Delete artifact (REST API) :<br />
 `DELETE http://xxx.xxx.xxx.xxx/artifactory/someRepo/someArtifact  ` <br />
  
@@ -410,7 +413,7 @@ explore the relevant artifactory User plugins - https://github.com/jfrog/artifac
 # Lab 5 - JVM Memory Issues
 
 Change Xms and Xmx JVM Heap size:<br />
-`helm upgrade artifactory  jfrog/artifactory --version 7.17.1 --set artifactory.javaOpts.xms="512m"  --set artifactory.javaOpts.xmx="1g" ` <br />
+`helm tiller run -- helm upgrade artifactory jfrog/artifactory --version 7.17.1 --set artifactory.javaOpts.xms="512" --set artifactory.javaOpts.xmx="1g" --set artifactory.javaOpts.other="-javaagent:glowroot.jar" --set postgresql.postgresPassword=zooloo` <br />
 <br />
 
  **After the helm upgrade we need to wait till pod are stable again nginx and artifactory (1/1)** <br/>
@@ -420,6 +423,3 @@ explore - https://www.jfrog.com/confluence/display/RTF/Artifactory+JMX+MBeans
 
 Restore change ? can u think what are the base practices sizing the VM<br />
 `helm upgrade artifactory  jfrog/artifactory --version 7.17.1 --set artifactory.javaOpts.xms="xxx"  --set artifactory.javaOpts.xmx="yyy" ` <br />
-
-
- 
